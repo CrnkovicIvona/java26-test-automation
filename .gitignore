@@ -1,0 +1,2 @@
+# Maven build output, including compiled files, reports, and failure screenshots.
+target/
