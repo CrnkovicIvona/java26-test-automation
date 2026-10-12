@@ -463,7 +463,7 @@ Before you accept an automated test as done, go through this list.
 
 ### Prerequisites
 
-- Java 26 (JDK) and Maven 3.9 or newer.
+- Java 26 (JDK). The Maven Wrapper downloads and runs the project's pinned Maven version.
 - Google Chrome or Chromium for local runs. Selenium Manager resolves the matching driver automatically.
 - An internet connection and access to `https://www.saucedemo.com/`.
 
@@ -471,29 +471,41 @@ Before you accept an automated test as done, go through this list.
 
 Run the full test suite:
 
-```bash
-mvn test
+```powershell
+.\mvnw.cmd test
 ```
+
+On macOS or Linux, use `./mvnw` in place of `.\mvnw.cmd`.
 
 Run headless, as in CI:
 
-```bash
-mvn -Dheadless=true test
+```powershell
+.\mvnw.cmd -Dheadless=true test
 ```
 
 Run only smoke tests:
 
-```bash
-mvn -Dheadless=true -Dgroups=smoke test
+```powershell
+.\mvnw.cmd -Dheadless=true -Dgroups=smoke test
 ```
 
-The smoke suite includes checks that all six catalog products display a loaded image, name, description, price, and enabled cart button; all four sorting options produce the expected product order; product details match the catalog and return to it correctly; and adding a product updates the cart count and button state.
+The smoke suite includes checks that all six catalog products display a loaded image, name, description, price, and enabled cart button; all four sorting options produce the expected product order; product details match the catalog and return to it correctly; adding a product updates the cart count and button state; cart rows show the selected product; the checkout overview displays correct line items and totals; and a completed order shows its confirmation.
+
+Run only the focused checkout and product-page tests:
+
+```powershell
+.\mvnw.cmd -Dheadless=true -Dgroups="product-details,cart,checkout-step-one,checkout-step-two,checkout-complete" test
+```
+
+Run the same focused tests with a visible Chrome window by omitting `-Dheadless=true`.
 
 Run the separately tagged special-user scenarios:
 
-```bash
-mvn -Dheadless=true -Dgroups=special-user test
+```powershell
+.\mvnw.cmd -Dheadless=true -Dgroups=special-user test
 ```
+
+Checkout regression tests cover empty carts and orders, required-field validation, accessible field names and keyboard focus, cart removal and navigation, and subtotal/tax/total calculations. Each test creates a fresh browser session; no automatic retry is configured, so a failed test remains failed and retains its failure evidence.
 
 GitHub Actions runs smoke tests on pushes and pull requests targeting `main` or `master`; they can also be started manually with **Run workflow**. The JUnit report contains pass/fail/skip counts and failure details in `target/surefire-reports/`. Failed tests capture screenshots in `target/screenshots/`. Both directories are uploaded as workflow artifacts when available, even when tests fail.
 

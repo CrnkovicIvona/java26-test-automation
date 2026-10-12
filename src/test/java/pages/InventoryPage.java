@@ -175,6 +175,16 @@ public class InventoryPage {
     }
 
     /**
+     * Opens the shopping cart and waits for its contents to load.
+     *
+     * @return loaded shopping cart page object
+     */
+    public CartPage openCart() {
+        wait.until(ExpectedConditions.elementToBeClickable(shoppingCart)).click();
+        return new CartPage(driver).waitUntilLoaded();
+    }
+
+    /**
      * Returns the number of products shown in the shopping-cart badge.
      *
      * @return cart item count, or zero when the empty cart has no badge

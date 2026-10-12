@@ -9,7 +9,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import pages.InventoryPage;
 import pages.LoginPage;
-import pages.ProductDetailsPage;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -121,45 +120,6 @@ class InventoryTest extends BaseTest {
                 () -> assertEquals(expectedPrices,
                         sortedProducts.stream().map(product -> product.price()).toList(),
                         "The product prices should appear in the expected sorted sequence"));
-    }
-
-    /** Confirms product details match the catalog and the back action returns to it. */
-    @Test
-    @Tag("smoke")
-    void productDetailsShouldMatchCatalogAndReturnToProducts() {
-        var catalogProduct = inventoryPage.productDetails().stream()
-                .filter(product -> product.name().equals(PRODUCT_TO_ADD))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError(
-                        "The expected product must be present in the catalog"));
-
-        ProductDetailsPage detailsPage = inventoryPage.openProductDetails(PRODUCT_TO_ADD);
-        var details = detailsPage.details();
-
-        assertAll("Product details: " + PRODUCT_TO_ADD,
-                () -> assertEquals(catalogProduct.name(), details.name(),
-                        "The details page should show the selected product name"),
-                () -> assertEquals(catalogProduct.description(), details.description(),
-                        "The details page description should match the catalog"),
-                () -> assertEquals(catalogProduct.price(), details.price(),
-                        "The details page price should match the catalog"),
-                () -> assertEquals(catalogProduct.imageAlt(), details.imageAlt(),
-                        "The details page image alternative text should match the catalog"),
-                () -> assertTrue(details.imageDisplayed(),
-                        "The product image should be visible on the details page"),
-                () -> assertTrue(details.imageLoaded(),
-                        "The product image should load on the details page"),
-                () -> assertEquals("Add to cart", details.cartButtonLabel(),
-                        "The product should initially be available to add to the cart"),
-                () -> assertTrue(details.cartButtonEnabled(),
-                        "The product cart action should be enabled"));
-
-        inventoryPage = detailsPage.backToProducts();
-        assertEquals("Products", inventoryPage.title(),
-                "The back action should return to the product catalog");
-        assertTrue(inventoryPage.productDetails().stream()
-                        .anyMatch(product -> product.name().equals(PRODUCT_TO_ADD)),
-                "The selected product should still be displayed in the catalog");
     }
 
     /**
