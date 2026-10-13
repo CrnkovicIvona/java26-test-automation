@@ -19,33 +19,27 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-/**
- * Verifies that the product catalog displays complete product cards and that
- * adding a product updates the cart state.
- */
+
 @Tag("inventory")
 class InventoryTest extends BaseTest {
 
-    /** Expected catalog size from the supplied SauceDemo inventory markup. */
+    
     private static final int EXPECTED_PRODUCT_COUNT = 6;
 
-    /** Product used to verify the add-to-cart interaction. */
+    
     private static final String PRODUCT_TO_ADD = "Sauce Labs Backpack";
 
-    /** Page object for catalog checks and cart interactions. */
+    
     private InventoryPage inventoryPage;
 
-    /** Signs in with the standard account and waits for the catalog to load. */
+    
     @BeforeEach
     void openInventoryPage() {
         new LoginPage(driver).open().loginAs(TestUsers.STANDARD);
         inventoryPage = new InventoryPage(driver).waitUntilLoaded();
     }
 
-    /**
-     * Confirms every product card has a loaded, accessible image; non-empty
-     * name, description, and price; and an enabled add-to-cart button.
-     */
+    
     @Test
     @Tag("smoke")
     void everyProductShouldDisplayCompleteDetails() {
@@ -75,7 +69,7 @@ class InventoryTest extends BaseTest {
         }
     }
 
-    /** Confirms adding a product increments the cart badge and changes its button. */
+    
     @Test
     @Tag("smoke")
     void addingProductShouldUpdateCartCountAndButton() {
@@ -90,15 +84,7 @@ class InventoryTest extends BaseTest {
                 "The added product button should change to Remove");
     }
 
-    /**
-     * Checks each sort option against the actual ordered product names and prices.
-     * The equal-priced T-shirts are also asserted in their expected stable order.
-     *
-     * @param optionValue value sent to the product sort dropdown
-     * @param expectedLabel label displayed for the selected sort option
-     * @param expectedNames expected sequence of product names after sorting
-     * @param expectedPrices expected sequence of prices after sorting
-     */
+    
     @ParameterizedTest(name = "{1}")
     @MethodSource("productSortScenarios")
     @Tag("smoke")
@@ -122,11 +108,7 @@ class InventoryTest extends BaseTest {
                         "The product prices should appear in the expected sorted sequence"));
     }
 
-    /**
-     * Supplies expected catalog sequences for all four SauceDemo sort options.
-     *
-     * @return scenarios containing the dropdown value, label, and expected data order
-     */
+    
     static Stream<Arguments> productSortScenarios() {
         return Stream.of(
                 arguments("az", "Name (A to Z)",

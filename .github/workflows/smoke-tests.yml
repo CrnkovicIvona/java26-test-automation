@@ -1,29 +1,18 @@
-# Run the fast, tagged smoke suite for code changes and on manual request.
 name: Smoke tests
 
-# Limit automatic runs to the repository's primary branch names.
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
   workflow_dispatch:
 
-# Grant only the permissions needed to read the repository and publish check results.
 permissions:
   contents: read
-  checks: write
 
 jobs:
-  # Execute the browser smoke tests in an isolated GitHub-hosted Linux runner.
   smoke:
     runs-on: ubuntu-latest
     steps:
-      # Retrieve the source code that the workflow will build and test.
       - name: Check out repository
         uses: actions/checkout@v4
 
-      # Install the project's required JDK and cache Maven dependencies between runs.
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -31,21 +20,9 @@ jobs:
           java-version: '26'
           cache: maven
 
-      # Run only tests tagged smoke, with Chrome configured for headless CI execution.
       - name: Run smoke tests
         run: mvn --batch-mode --no-transfer-progress -Dheadless=true -Dgroups=smoke test
 
-      # Publish the JUnit XML results as a GitHub check, including when tests fail.
-      - name: Publish test results
-        if: always()
-        uses: dorny/test-reporter@v2
-        with:
-          name: Smoke test results
-          path: target/surefire-reports/TEST-*.xml
-          reporter: java-junit
-          fail-on-error: false
-
-      # Preserve Surefire's XML and text reports for later inspection.
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -55,7 +32,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      # Preserve screenshots captured by the JUnit extension when a test fails.
       - name: Upload failure screenshots
         if: always()
         uses: actions/upload-artifact@v4

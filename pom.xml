@@ -9,19 +9,15 @@
     <artifactId>java26-test-automation</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <!-- Shared build properties keep Java and test-library versions in one place. -->
     <properties>
-        <!-- Compile project source against the specified Java language and API level. -->
         <maven.compiler.release>26</maven.compiler.release>
-        <!-- Use UTF-8 consistently when Maven reads and writes project files. -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- Selenium drives the Chrome browser used for end-to-end UI checks. -->
-        <selenium.version>4.49.0</selenium.version>
-        <!-- JUnit Jupiter provides test annotations, assertions, and parameterized tests. -->
-        <junit.version>6.0.3</junit.version>
+        <selenium.version>4.51.0</selenium.version>
+        <junit.jupiter.version>5.10.2</junit.jupiter.version>
+        <junit.platform.version>1.10.2</junit.platform.version>
+        <cucumber.version>7.18.1</cucumber.version>
     </properties>
 
-    <!-- Test dependencies provide browser automation and the JUnit test platform. -->
     <dependencies>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
@@ -31,12 +27,29 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <version>${junit.platform.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit-platform-engine</artifactId>
+            <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
-    <!-- Pin build plugins so compilation and JUnit test execution are reproducible. -->
     <build>
         <plugins>
             <plugin>
@@ -48,7 +61,36 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>tag-filtered-tests</id>
+            <activation>
+                <property>
+                    <name>groups</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/CucumberTest.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

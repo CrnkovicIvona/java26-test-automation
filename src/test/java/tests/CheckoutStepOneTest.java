@@ -11,13 +11,11 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies checkout customer-information validation, navigation, and accessibility.
- */
+
 @Tag("checkout-step-one")
 class CheckoutStepOneTest extends StoreTestBase {
 
-    /** Confirms missing customer fields are rejected with a clear validation message. */
+    
     @ParameterizedTest(name = "Missing {0} should be rejected")
     @MethodSource("data.CheckoutTestData#missingCustomerFields")
     @Tag("regression")
@@ -40,7 +38,7 @@ class CheckoutStepOneTest extends StoreTestBase {
                 "Invalid customer information should keep the user on checkout step one");
     }
 
-    /** Verifies that valid customer data advances to the order overview. */
+    
     @Test
     @Tag("regression")
     void validCustomerInformationShouldOpenCheckoutOverview() {
@@ -54,7 +52,7 @@ class CheckoutStepOneTest extends StoreTestBase {
                         "The selected cart item should remain in checkout"));
     }
 
-    /** Checks accessible names, forward keyboard order, and visible keyboard focus. */
+    
     @Test
     @Tag("regression")
     void customerFieldsShouldHaveAccessibleNamesAndLogicalKeyboardFocus() {
@@ -82,7 +80,7 @@ class CheckoutStepOneTest extends StoreTestBase {
                 "Tab should move focus from last name to postal code");
     }
 
-    /** Confirms Cancel returns to the cart without changing its contents. */
+    
     @Test
     @Tag("regression")
     void cancelShouldReturnToCart() {

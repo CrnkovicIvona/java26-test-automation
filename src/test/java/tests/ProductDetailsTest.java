@@ -8,13 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies that a product details page is consistent with its catalog entry.
- */
+
 @Tag("product-details")
 class ProductDetailsTest extends StoreTestBase {
 
-    /** Confirms the details content, product image accessibility, and return action. */
+    
     @Test
     @Tag("smoke")
     void productDetailsShouldMatchCatalogAndReturnToProducts() {

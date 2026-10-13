@@ -8,16 +8,16 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies order summary contents and arithmetic on checkout step two.
- */
+
 @Tag("checkout-step-two")
 class CheckoutStepTwoTest extends StoreTestBase {
 
-    /** Validates line items, payment/delivery details, and calculated order totals. */
+    
     @Test
     @Tag("smoke")
     void overviewShouldShowCorrectItemsAndCalculatedTotals() {
+        var expectedBackpack = productDetailsFor(BACKPACK);
+        var expectedBikeLight = productDetailsFor(BIKE_LIGHT);
         CheckoutStepTwoPage overviewPage = enterValidCustomerInformation(
                 openCheckoutWithProducts(BACKPACK, BIKE_LIGHT));
         var items = overviewPage.items();
@@ -27,10 +27,14 @@ class CheckoutStepTwoTest extends StoreTestBase {
                         "The overview should contain both selected product rows"),
                 () -> assertEquals(BACKPACK, items.get(0).name(),
                         "The first row should match the first selected product"),
+                () -> assertEquals(expectedBackpack.description(), items.get(0).description(),
+                        "The first row should display the catalog description"),
                 () -> assertEquals("$29.99", items.get(0).price(),
                         "The first row should display the catalog price"),
                 () -> assertEquals(BIKE_LIGHT, items.get(1).name(),
                         "The second row should match the second selected product"),
+                () -> assertEquals(expectedBikeLight.description(), items.get(1).description(),
+                        "The second row should display the catalog description"),
                 () -> assertEquals("$9.99", items.get(1).price(),
                         "The second row should display the catalog price"),
                 () -> assertEquals("SauceCard #31337",
@@ -49,9 +53,9 @@ class CheckoutStepTwoTest extends StoreTestBase {
                         "The overview badge should match the order item count"));
     }
 
-    /** Ensures an empty-cart checkout has no line items and zero-valued totals. */
+    
     @Test
-    @Tag("regression")
+    @Tag("characterization")
     void emptyOrderOverviewShouldShowNoItemsAndZeroTotals() {
         var checkoutPage = openCheckoutWithProducts();
         CheckoutStepTwoPage overviewPage = enterValidCustomerInformation(checkoutPage);
@@ -71,7 +75,7 @@ class CheckoutStepTwoTest extends StoreTestBase {
                         "An empty cart should have a zero total"));
     }
 
-    /** Confirms the overview Cancel action returns to the product catalog. */
+    
     @Test
     @Tag("regression")
     void cancelShouldReturnToCatalogAndRetainCart() {
@@ -88,4 +92,33 @@ class CheckoutStepTwoTest extends StoreTestBase {
                         returnedInventory.productCartButtonLabel(BACKPACK),
                         "The selected product should still be marked as added"));
     }
+
+    
+    @Test
+    @Tag("regression")
+    void singleProductOrderShouldShowCorrectTotals() {
+        var expectedBackpack = productDetailsFor(BACKPACK);
+        var overviewPage = enterValidCustomerInformation(
+                openCheckoutWithProducts(BACKPACK));
+        var items = overviewPage.items();
+
+        assertAll("Single-product checkout overview",
+                () -> assertEquals(1, overviewPage.itemCount(),
+                        "The overview should contain one product"),
+                () -> assertEquals(BACKPACK, items.getFirst().name(),
+                        "The selected product should appear in the overview"),
+                () -> assertEquals(expectedBackpack.description(), items.getFirst().description(),
+                        "The selected product should display its catalog description"),
+                () -> assertEquals("$29.99", items.getFirst().price(),
+                        "The product price should match the catalog"),
+                () -> assertEquals("Item total: $29.99", overviewPage.subtotal(),
+                        "Subtotal should equal the product price"),
+                () -> assertEquals("Tax: $2.40", overviewPage.tax(),
+                        "Tax should be calculated for one product"),
+                () -> assertEquals("Total: $32.39", overviewPage.total(),
+                        "Total should equal subtotal plus tax"),
+                () -> assertEquals(1, overviewPage.cartBadgeCount(),
+                        "The cart badge should match the order item count"));
+    }
+
 }

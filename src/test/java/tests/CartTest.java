@@ -4,17 +4,18 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import pages.CartPage;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies cart contents, item removal, and cart navigation.
- */
+
 @Tag("cart")
 class CartTest extends StoreTestBase {
 
-    /** Confirms a new independent session opens an empty cart without a badge. */
+    
     @Test
     @Tag("regression")
     void emptyCartShouldHaveNoItemsOrBadge() {
@@ -29,10 +30,11 @@ class CartTest extends StoreTestBase {
                         "An empty cart should not show a count badge"));
     }
 
-    /** Checks that a cart row preserves the expected product data and quantity. */
+    
     @Test
     @Tag("smoke")
     void addedProductShouldAppearWithCorrectCartDetails() {
+        var expectedProduct = productDetailsFor(BACKPACK);
         var cartPage = openCartWithProducts(BACKPACK);
         var item = cartPage.items().getFirst();
 
@@ -43,6 +45,8 @@ class CartTest extends StoreTestBase {
                         "The cart quantity should be one"),
                 () -> assertEquals(BACKPACK, item.name(),
                         "The cart row should display the added product"),
+                () -> assertEquals(expectedProduct.description(), item.description(),
+                        "The cart row should display the catalog description"),
                 () -> assertEquals("$29.99", item.price(),
                         "The cart row should display the catalog price"),
                 () -> assertEquals("Remove", item.removeButtonLabel(),
@@ -53,7 +57,35 @@ class CartTest extends StoreTestBase {
                         "The cart badge should match the number of items"));
     }
 
-    /** Confirms removing one item from a two-product cart preserves the other. */
+    @Test
+    @Tag("regression")
+    void multipleProductsShouldAppearInCart() {
+        var expectedBackpack = productDetailsFor(BACKPACK);
+        var expectedBikeLight = productDetailsFor(BIKE_LIGHT);
+        var cartPage = openCartWithProducts(BACKPACK, BIKE_LIGHT);
+        var items = cartPage.items();
+
+        assertAll("Multiple cart items",
+                () -> assertEquals(2, cartPage.itemCount(),
+                        "The cart should contain one row for each selected product"),
+                () -> assertEquals(Set.of(BACKPACK, BIKE_LIGHT),
+                        items.stream().map(CartPage.CartItem::name).collect(Collectors.toSet()),
+                        "The cart should contain exactly the selected products"),
+                () -> assertTrue(items.stream().allMatch(item -> item.quantity() == 1),
+                        "Each selected product should have a quantity of one"),
+                () -> assertEquals(expectedBackpack.description(),
+                        items.stream().filter(item -> item.name().equals(BACKPACK))
+                                .findFirst().orElseThrow().description(),
+                        "The backpack row should display its catalog description"),
+                () -> assertEquals(expectedBikeLight.description(),
+                        items.stream().filter(item -> item.name().equals(BIKE_LIGHT))
+                                .findFirst().orElseThrow().description(),
+                        "The bike-light row should display its catalog description"),
+                () -> assertEquals(2, cartPage.badgeCount(),
+                        "The cart badge should match the number of products"));
+    }
+
+    
     @Test
     @Tag("regression")
     void removingProductShouldUpdateCartContentsAndBadge() {
@@ -76,7 +108,7 @@ class CartTest extends StoreTestBase {
                         "The badge should disappear when the cart becomes empty"));
     }
 
-    /** Checks that Continue Shopping returns to the catalog and retains cart state. */
+    
     @Test
     @Tag("regression")
     void continueShoppingShouldPreserveCartContents() {
@@ -93,7 +125,7 @@ class CartTest extends StoreTestBase {
                         "The added product should remain selected"));
     }
 
-    /** Confirms Checkout opens step one with the cart's current item count. */
+    
     @Test
     @Tag("regression")
     void checkoutShouldOpenCustomerInformationWithCartState() {

@@ -7,13 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies the successful order completion and confirmation page.
- */
+
 @Tag("checkout-complete")
 class CheckoutCompleteTest extends StoreTestBase {
 
-    /** Runs the successful checkout flow and verifies the resulting confirmation. */
+    
     @Test
     @Tag("smoke")
     void successfulCheckoutShouldDisplayOrderConfirmation() {
