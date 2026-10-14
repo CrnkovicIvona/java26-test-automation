@@ -1,0 +1,55 @@
+# Scenario and risk registry for the SauceDemo UI automation.
+# One line per user-facing behavior. Fields are separated by ';' (no ';' inside a field).
+#
+# priority   : P1 = critical journey, P2 = important, P3 = nice to have
+# automation : manually assessed; FULL = linked tests check the whole expected result,
+#              PARTIAL = linked tests check only part of it, NONE = no automated test
+# tests      : comma-separated ClassName#method, or ClassName#method[2] for one invocation of a parameterized test
+# last_verified : date (YYYY-MM-DD) someone last confirmed the expectation against the live application; leave empty if never
+id;area;title;expected;priority;automation;tests;last_verified
+LOGIN-001;Login;Valid credentials open the product catalog;standard_user lands on the Products page;P1;FULL;LoginTest#standardUserShouldSeeProductsAfterLogin,CucumberTest#Standard user can log in and view products;2026-10-13
+LOGIN-002;Login;Wrong password is rejected;Error message is shown and the user stays on the login page;P2;FULL;LoginTest#invalidLoginShouldShowErrorMessage[2],CucumberTest#Wrong password is rejected;2026-10-13
+LOGIN-003;Login;Unknown user is rejected;Error message is shown and the user stays on the login page;P2;FULL;LoginTest#invalidLoginShouldShowErrorMessage[1],CucumberTest#Unknown user is rejected;2026-10-13
+LOGIN-004;Login;Both fields empty;The username-required message is shown and the user stays on the login page;P2;FULL;LoginTest#invalidLoginShouldShowErrorMessage[5],CucumberTest#Empty username and password are rejected;2026-10-13
+LOGIN-005;Login;Empty password is rejected;Password-required message is shown and the user stays on the login page;P2;FULL;LoginTest#invalidLoginShouldShowErrorMessage[4],CucumberTest#Empty password is rejected;2026-10-13
+LOGIN-006;Login;Locked-out user is rejected;Locked-out message is shown and the user stays on the login page;P2;FULL;LoginTest#lockedOutUserShouldSeeLockedOutMessage,CucumberTest#Locked user cannot log in;2026-10-13
+LOGIN-007;Login;Logout returns to the login page;The login form is visible after logging out;P2;FULL;LoginTest#userShouldReturnToLoginPageAfterLogout,CucumberTest#User can log out and return to the login form;2026-10-13
+LOGIN-008;Login;Empty username is rejected;Username-required message is shown and the user stays on the login page;P2;FULL;LoginTest#invalidLoginShouldShowErrorMessage[3],CucumberTest#Empty username is rejected;2026-10-13
+LOGIN-009;Login;Password field masks the input;The password field has the type password;P3;FULL;LoginTest#passwordFieldShouldMaskInput;2026-10-13
+LOGIN-010;Login;Protected page needs a session;Opening inventory.html without logging in shows the not-logged-in message;P2;FULL;LoginTest#protectedPageShouldNotBeAccessibleWithoutLogin;2026-10-13
+LOGIN-011;Login;Error message clears after a successful login;No stale error message is visible after a valid login;P3;FULL;LoginTest#errorMessageShouldClearAfterSuccessfulLogin;2026-10-13
+LOGIN-012;Login;Back button after logout does not expose protected pages;The browser Back button after logout shows the login page, not the catalog;P2;FULL;LoginTest#browserBackAfterLogoutShouldNotExposeCatalog;2026-10-13
+CAT-001;Catalog;Every product card is complete;Each product shows name, description, price, a loaded image and an enabled Add to cart button;P1;FULL;InventoryTest#everyProductShouldDisplayCompleteDetails;2026-10-13
+CAT-002;Catalog;Sort by name A to Z;Products appear in ascending name order;P2;FULL;InventoryTest#productsShouldBeSortedBySelectedOption[1];2026-10-13
+CAT-003;Catalog;Sort by name Z to A;Products appear in descending name order;P2;FULL;InventoryTest#productsShouldBeSortedBySelectedOption[2];2026-10-13
+CAT-004;Catalog;Sort by price low to high;Products appear in ascending price order, equal prices in a stable order;P2;FULL;InventoryTest#productsShouldBeSortedBySelectedOption[3];2026-10-13
+CAT-005;Catalog;Sort by price high to low;Products appear in descending price order, equal prices in a stable order;P2;FULL;InventoryTest#productsShouldBeSortedBySelectedOption[4];2026-10-13
+CAT-006;Catalog;Product details match the catalog;The details page shows the same name, description, price and image as the card, and Back returns to the catalog;P2;FULL;ProductDetailsTest#productDetailsShouldMatchCatalogAndReturnToProducts;2026-10-13
+CAT-007;Catalog;Sort option after opening details and going back;The sort order is kept or reset according to an agreed expectation;P3;NONE;;
+CART-001;Cart;Adding a product updates the badge and the button;The badge shows 1 and the button changes to Remove;P1;FULL;InventoryTest#addingProductShouldUpdateCartCountAndButton,CucumberTest#User can add a product to the cart;2026-10-13
+CART-002;Cart;Adding several products;The cart contains exactly the selected products, each with quantity 1, and the badge matches the item count;P2;FULL;CartTest#multipleProductsShouldAppearInCart;2026-10-13
+CART-003;Cart;Cart row shows the correct product data;Name, description, price, quantity 1 and an enabled Remove button are shown;P2;FULL;CartTest#addedProductShouldAppearWithCorrectCartDetails,CucumberTest#User can add a product to the cart;2026-10-13
+CART-004;Cart;Removing products updates contents and badge;Rows disappear one by one and the badge disappears when the cart is empty;P2;FULL;CartTest#removingProductShouldUpdateCartContentsAndBadge;2026-10-13
+CART-005;Cart;A new session starts with an empty cart;No rows and no badge;P2;FULL;CartTest#emptyCartShouldHaveNoItemsOrBadge;2026-10-13
+CART-006;Cart;Continue Shopping keeps the cart state;The catalog shows the same badge and the added product still has a Remove button;P2;FULL;CartTest#continueShoppingShouldPreserveCartContents;2026-10-13
+CHK-001;Checkout;Checkout opens from the cart;The customer information page is shown and the cart count is preserved;P2;FULL;CartTest#checkoutShouldOpenCustomerInformationWithCartState;2026-10-13
+CHK-002;Checkout;Missing first name is rejected;A validation message is shown and the user stays on step one;P2;FULL;CheckoutStepOneTest#missingRequiredCustomerFieldShouldShowValidation[1];2026-10-13
+CHK-003;Checkout;Missing last name is rejected;A validation message is shown and the user stays on step one;P2;FULL;CheckoutStepOneTest#missingRequiredCustomerFieldShouldShowValidation[2];2026-10-13
+CHK-004;Checkout;Missing postal code is rejected;A validation message is shown and the user stays on step one;P2;FULL;CheckoutStepOneTest#missingRequiredCustomerFieldShouldShowValidation[3];2026-10-13
+CHK-005;Checkout;Valid customer information opens the overview;The overview page is shown and the cart count is preserved;P1;FULL;CheckoutStepOneTest#validCustomerInformationShouldOpenCheckoutOverview,CucumberTest#User can complete a valid checkout;2026-10-13
+CHK-006;Checkout;Cancel on step one returns to the cart;The cart page is shown with its contents unchanged;P2;FULL;CheckoutStepOneTest#cancelShouldReturnToCart;2026-10-13
+CHK-007;Checkout;Customer fields are accessible by name and keyboard;Fields have accessible names, Tab follows the field order and focus is visible;P3;FULL;CheckoutStepOneTest#customerFieldsShouldHaveAccessibleNamesAndLogicalKeyboardFocus;2026-10-13
+CHK-008;Checkout;Overview totals for two products;Item total 39.98, tax 3.20, total 43.18, calculated by hand from 29.99 and 9.99;P2;FULL;CheckoutStepTwoTest#overviewShouldShowCorrectItemsAndCalculatedTotals;2026-10-13
+CHK-009;Checkout;Overview totals for one product;Item total 29.99, tax 2.40, total 32.39;P2;FULL;CheckoutStepTwoTest#singleProductOrderShouldShowCorrectTotals;2026-10-13
+CHK-010;Checkout;Cancel on the overview returns to the catalog;The catalog is shown and the cart keeps its product;P3;FULL;CheckoutStepTwoTest#cancelShouldReturnToCatalogAndRetainCart;2026-10-13
+CHK-011;Checkout;Characterization: empty checkout currently shows zero totals;Observed behavior only: an overview without items and with zero totals. This is not an approved product requirement pending a product decision;P3;PARTIAL;CheckoutStepTwoTest#emptyOrderOverviewShouldShowNoItemsAndZeroTotals;2026-10-13
+CHK-012;Checkout;Finishing an order shows the confirmation and empties the cart;The thank-you page is shown, the badge is gone and the catalog cart is empty;P1;FULL;CheckoutCompleteTest#successfulCheckoutShouldDisplayOrderConfirmation,CucumberTest#User can complete a valid checkout;2026-10-13
+CHK-013;Checkout;Reloading the page during checkout;The state stays consistent after a reload on each checkout step;P3;NONE;;
+CHK-014;Checkout;Opening a checkout step by URL without a session;Access is refused or redirected, as for the catalog;P2;NONE;;
+SPEC-001;Special users;problem_user can open the catalog;The catalog opens. Its known anomalies are not asserted yet;P3;PARTIAL;ProblematicUserTest#problemUserCanOpenCatalogForDefectInvestigation;2026-10-13
+SPEC-002;Special users;performance_glitch_user can open the catalog;The catalog opens despite slow responses. Timing is not asserted yet;P3;PARTIAL;ProblematicUserTest#performanceGlitchUserCanOpenCatalogForDefectInvestigation;2026-10-13
+SPEC-003;Special users;error_user can open the catalog;The catalog opens. Its error behavior is not asserted yet;P3;PARTIAL;ProblematicUserTest#errorUserCanOpenCatalogForDefectInvestigation;2026-10-13
+SPEC-004;Special users;visual_user can open the catalog;The catalog opens. Visual differences are not asserted yet;P3;PARTIAL;ProblematicUserTest#visualUserCanOpenCatalogForDefectInvestigation;2026-10-13
+A11Y-001;Accessibility;Login form works with the keyboard;Tab order is logical, focus is visible and Enter submits the form;P3;NONE;;
+VIS-001;Visual;Catalog layout has no visual defects;Controlled viewport comparison with a defined tolerance;P3;NONE;;
+RESP-001;Responsive;Key journeys work on a mobile viewport;Login, add to cart and checkout work at a narrow width;P3;NONE;;

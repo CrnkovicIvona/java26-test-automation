@@ -1,0 +1,251 @@
+name: CI - Full test suite
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - feature/**
+  pull_request:
+    branches:
+      - main
+      - master
+      - feature/**
+  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Full test suite
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      report_generated: ${{ steps.quality-report.outputs.generated }}
+    steps:
+      - name: Check out repository
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        id: setup-java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '26'
+          cache: maven
+
+      - name: Check out test history
+        id: checkout-history
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: history-repo
+          fetch-depth: 0
+
+      - name: Prepare test history
+        id: prepare-history
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          if git -C history-repo ls-remote --exit-code origin refs/heads/qa-history >/dev/null 2>&1; then
+            git -C history-repo fetch origin qa-history
+            git -C history-repo switch --track -c qa-history origin/qa-history
+          else
+            mkdir -p history-repo/quality-history/runs
+          fi
+
+      - name: Run clean test suite
+        id: tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          mvn --batch-mode --no-transfer-progress clean -Dheadless=true test 2>&1 | tee "$RUNNER_TEMP/maven-test.log"
+          test_exit=${PIPESTATUS[0]}
+          set -e
+          mkdir -p target
+          cp "$RUNNER_TEMP/maven-test.log" target/maven-test.log
+          echo "exit_code=$test_exit" >> "$GITHUB_OUTPUT"
+
+      - name: Create quality report
+        id: quality-report
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: |
+          generated=false
+          if [ -d target/test-classes/reporting ]; then
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              java -cp target/test-classes reporting.ReportGenerator
+            else
+              java -cp target/test-classes reporting.ReportGenerator \
+                target/surefire-reports \
+                src/test/resources/scenario-registry.csv \
+                target/quality-report \
+                history-repo/quality-history/runs
+            fi
+            if [ -f target/quality-report/current-run.csv ]; then
+              generated=true
+            fi
+          else
+            echo "Report generator was not compiled; test setup or compilation failed."
+          fi
+          echo "generated=$generated" >> "$GITHUB_OUTPUT"
+
+      - name: Classify result and summarize
+        id: summary
+        if: always()
+        shell: bash
+        run: |
+          test_exit="${{ steps.tests.outputs.exit_code }}"
+          category="INFRASTRUCTURE_FAILURE"
+          evidence="A prerequisite step failed or the test command did not start."
+
+          if [ "${{ steps.checkout.outcome }}" != "success" ] || [ "${{ steps.setup-java.outcome }}" != "success" ]; then
+            category="INFRASTRUCTURE_FAILURE"
+            evidence="Repository checkout or Java setup did not complete."
+          elif [ "${{ github.event_name }}" != "pull_request" ] && { [ "${{ steps.checkout-history.outcome }}" != "success" ] || [ "${{ steps.prepare-history.outcome }}" != "success" ]; }; then
+            category="INFRASTRUCTURE_FAILURE"
+            evidence="Test-history checkout or preparation did not complete."
+          elif [ -n "$test_exit" ] && [ "$test_exit" -eq 0 ]; then
+            category="PASSED"
+            evidence="The clean headless JUnit and Cucumber test suite completed successfully."
+          elif grep -E -i -q 'NoTestsDiscoveredException|No tests were executed|No tests to run|Tests run: 0' target/maven-test.log 2>/dev/null; then
+            category="CONFIGURATION_FAILURE"
+            evidence="Maven or the JUnit Platform did not discover tests; inspect the test selection and runner configuration."
+          elif grep -E -i -q 'Could not resolve|Could not transfer|UnknownHostException|Connection timed out|No space left|insufficient memory|Native memory allocation|OutOfMemoryError|Chrome failed to start|DevToolsActivePort|SessionNotCreatedException|Unable to obtain.*driver|mvn: command not found' target/maven-test.log 2>/dev/null || compgen -G 'hs_err_pid*.log' > /dev/null; then
+            category="INFRASTRUCTURE_FAILURE"
+            evidence="Maven output or JVM crash logs indicate a resource, network, browser, or driver failure."
+          elif [ -d target/surefire-reports ] && grep -R -E -q '<(failure|error)([[:space:]>])' target/surefire-reports --include='TEST-*.xml'; then
+            category="TEST_FAILURE"
+            evidence="Surefire XML contains one or more failed or errored tests."
+          else
+            category="CONFIGURATION_FAILURE"
+            evidence="The build failed without a Surefire test failure or a recognized infrastructure signature; inspect the Maven log for compilation, test discovery, or configuration errors."
+          fi
+
+          echo "category=$category" >> "$GITHUB_OUTPUT"
+          {
+            echo "## CI result: $category"
+            echo
+            echo "- **Test command exit code:** ${test_exit:-not started}"
+            echo "- **Classification evidence:** $evidence"
+            echo "- **Detailed diagnostics:** see the uploaded Surefire/Cucumber reports, screenshots, and Maven log artifacts."
+            if [ -f target/quality-report/summary.md ]; then
+              echo
+              cat target/quality-report/summary.md
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload quality report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-report
+          path: target/quality-report/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload Surefire reports and Maven log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: |
+            target/surefire-reports/
+            target/maven-test.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload Cucumber reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-reports
+          path: |
+            target/cucumber-report.html
+            target/cucumber-report.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload failure screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-screenshots
+          path: target/screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Enforce CI gate
+        if: always()
+        shell: bash
+        run: |
+          if [ "${{ steps.checkout.outcome }}" != "success" ] || [ "${{ steps.setup-java.outcome }}" != "success" ]; then
+            exit 1
+          fi
+          if [ -z "${{ steps.tests.outputs.exit_code }}" ] || [ "${{ steps.tests.outputs.exit_code }}" -ne 0 ]; then
+            exit 1
+          fi
+
+  save-history:
+    if: always() && needs.test.outputs.report_generated == 'true' && (github.event_name == 'schedule' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')))
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out test history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: history-repo
+          fetch-depth: 0
+
+      - name: Prepare test history branch
+        run: |
+          if ! git -C history-repo ls-remote --exit-code origin refs/heads/qa-history >/dev/null 2>&1; then
+            git -C history-repo push origin "${GITHUB_SHA}:refs/heads/qa-history" || \
+              git -C history-repo ls-remote --exit-code origin refs/heads/qa-history >/dev/null
+          fi
+          git -C history-repo fetch origin qa-history
+          git -C history-repo switch --track -c qa-history origin/qa-history
+
+      - name: Download quality report
+        uses: actions/download-artifact@v4
+        with:
+          name: quality-report
+          path: target/quality-report
+
+      - name: Save run history
+        run: |
+          history_file="quality-history/runs/${GITHUB_RUN_ID}.csv"
+          mkdir -p "history-repo/$(dirname "$history_file")"
+          cp "target/quality-report/current-run.csv" "history-repo/$history_file"
+          git -C history-repo config user.name "github-actions[bot]"
+          git -C history-repo config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C history-repo add "$history_file"
+          git -C history-repo commit -m "Record regression run ${GITHUB_RUN_ID}"
+          for attempt in 1 2 3 4 5; do
+            if git -C history-repo push origin qa-history; then
+              exit 0
+            fi
+            git -C history-repo fetch origin qa-history
+            git -C history-repo rebase origin/qa-history
+          done
+          exit 1
+
+      - name: Summarize history persistence failure
+        if: failure()
+        run: |
+          {
+            echo "## INFRASTRUCTURE_FAILURE: CI run history could not be persisted"
+            echo
+            echo "The test result is available in the preceding job. Check repository write permissions and the \`qa-history\` branch."
+          } >> "$GITHUB_STEP_SUMMARY"
