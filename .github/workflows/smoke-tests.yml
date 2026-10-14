@@ -1,7 +1,19 @@
 name: Smoke tests
 
 on:
+  push:
+    branches:
+      - main
+      - master
+      - feature/**
+  pull_request:
+    branches:
+      - main
+      - master
+      - feature/**
   workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * 1'
 
 permissions:
   contents: read
