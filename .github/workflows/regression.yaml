@@ -218,7 +218,7 @@ jobs:
           git -C history-repo switch --track -c qa-history origin/qa-history
 
       - name: Download quality report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: quality-report
           path: target/quality-report
