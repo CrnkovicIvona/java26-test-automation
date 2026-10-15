@@ -29,7 +29,7 @@ jobs:
     steps:
       - name: Check out repository
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Java
         id: setup-java
@@ -42,7 +42,7 @@ jobs:
       - name: Check out test history
         id: checkout-history
         if: github.event_name != 'pull_request'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           path: history-repo
@@ -202,7 +202,7 @@ jobs:
       contents: write
     steps:
       - name: Check out test history
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           path: history-repo
