@@ -13,7 +13,7 @@
         <maven.compiler.release>26</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <selenium.version>4.51.0</selenium.version>
-        <junit.jupiter.version>5.10.2</junit.jupiter.version>
+        <junit.jupiter.version>6.1.3</junit.jupiter.version>
         <junit.platform.version>6.1.3</junit.platform.version>
         <cucumber.version>7.18.1</cucumber.version>
     </properties>
