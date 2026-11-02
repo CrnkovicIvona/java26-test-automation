@@ -129,3 +129,36 @@ GitHub Actions runs Java 26 and headless Chrome:
 - **Smoke tests** remain available as a manually started workflow; they are not run in parallel with the full CI suite.
 
 To make GitHub block merging when CI fails, configure branch protection or a repository ruleset for `main` and `master` and require the `Full test suite` status check. Download the `quality-report` artifact and open `index.html` in a browser to inspect the custom report.
+
+
+
+# Stabilizing UI Tests with Explicit Waits
+
+During CI test execution, one Cucumber scenario failed intermittently when verifying that the login form was displayed after logging out.
+
+The issue was caused by a synchronization problem between Selenium and the application. The test attempted to locate the login button immediately after clicking the Logout link. However, the application had not necessarily completed navigation and rendered the login form yet. As a result, Selenium occasionally threw a `NoSuchElementException`.
+
+**Root cause**
+
+The original implementation used `findElement()` without waiting for the element to become available:
+
+```java
+public boolean isLoginButtonDisplayed() {
+    return driver.findElement(loginButton).isDisplayed();
+}
+```
+
+**Solution**
+
+I introduced explicit waits using Selenium's `WebDriverWait` and `ExpectedConditions` to ensure that the application had returned to the login page and that the login button was visible before continuing with the assertion.
+
+I also updated the logout method to wait for the URL to return to the application's base URL after logout.
+
+**Outcome**
+
+- Resolved the synchronization issue.
+- Improved the reliability and stability of the logout scenario.
+- Reduced the risk of timing-related test failures.
+- Preserved the existing test architecture and all other passing tests.
+
+**Key takeaway:** Reliable UI test automation requires synchronizing test execution with the application's actual state rather than assuming that UI elements are immediately available after user interactions.
