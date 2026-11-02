@@ -14,6 +14,6 @@ import org.junit.platform.suite.api.Suite;
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "steps")
 @ConfigurationParameter(
         key = PLUGIN_PROPERTY_NAME,
-        value = "pretty, html:target/cucumber-report.html")
+        value = "pretty, json:target/cucumber-report.json, html:target/cucumber-report.html")
 public class CucumberTest {
 }
