@@ -175,9 +175,12 @@ public class InventoryPage {
 
     
     public void logout() {
-        driver.findElement(menuButton).click();
-        wait.until(ExpectedConditions.elementToBeClickable(logoutLink)).click();
-    }
+    wait.until(ExpectedConditions.elementToBeClickable(menuButton)).click();
+
+    wait.until(ExpectedConditions.elementToBeClickable(logoutLink)).click();
+
+    wait.until(ExpectedConditions.urlToBe(TestConfig.BASE_URL));
+}
 
     
     public record ProductDetails(
