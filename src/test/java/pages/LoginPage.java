@@ -71,8 +71,14 @@ public class LoginPage {
 
     
     public boolean isLoginButtonDisplayed() {
-        return driver.findElement(loginButton).isDisplayed();
+    try {
+        return wait.until(
+                ExpectedConditions.visibilityOfElementLocated(loginButton)
+        ).isDisplayed();
+    } catch (org.openqa.selenium.TimeoutException e) {
+        return false;
     }
+}
 
     
     public String passwordFieldType() {
