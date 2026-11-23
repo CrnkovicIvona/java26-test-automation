@@ -15,7 +15,7 @@
         <selenium.version>4.52.0</selenium.version>
         <junit.jupiter.version>6.1.3</junit.jupiter.version>
         <junit.platform.version>6.1.3</junit.platform.version>
-        <cucumber.version>8.0.4</cucumber.version>
+        <cucumber.version>8.1.0</cucumber.version>
         <jackson.version>2.20.0</jackson.version>
     </properties>
 
